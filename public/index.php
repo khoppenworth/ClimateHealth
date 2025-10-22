@@ -101,6 +101,33 @@ $latest = $db->query("SELECT date_utc FROM climate_values ORDER BY date_utc DESC
 $rows = $db->query("SELECT ou.name, cv.date_utc, cv.tmean_c, cv.rain_mm
                     FROM climate_values cv JOIN org_units ou ON ou.id=cv.org_unit_id
                     ORDER BY cv.date_utc DESC, ou.name ASC LIMIT 50")->fetchAll();
+
+$stateFile = __DIR__ . '/../tmp/system_state.json';
+$installState = [];
+if (is_readable($stateFile)) {
+  $raw = file_get_contents($stateFile);
+  if ($raw !== false) {
+    $decoded = json_decode($raw, true);
+    if (is_array($decoded)) {
+      $installState = $decoded;
+    }
+  }
+}
+$currentVersion = $installState['version'] ?? '1.0.0';
+$previousVersion = $installState['previous_version'] ?? null;
+$lastAction = $installState['last_action'] ?? null;
+$stateUpdated = $installState['updated_at'] ?? null;
+$lastActionLabel = $lastAction ? strtoupper($lastAction) : 'NONE';
+
+$backupDir = __DIR__ . '/../tmp/backups';
+$latestBackup = null;
+if (is_dir($backupDir)) {
+  $backups = glob($backupDir . '/*.sql');
+  if ($backups) {
+    rsort($backups);
+    $latestBackup = basename($backups[0]);
+  }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
