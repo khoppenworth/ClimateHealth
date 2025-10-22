@@ -1,0 +1,10 @@
+{
+  "app_title": "OpenClimate-DHIS",
+  "tagline": "Climate & Health Intelligence Console",
+  "logo_url": "/assets/img/openclimate-logo.svg",
+  "primary_color": "#0b3954",
+  "accent_color": "#ff7f11",
+  "data_reference": "Climate indicators derived from NASA POWER, Copernicus Climate Data Store, and NOAA Global Historical Climatology Network datasets.",
+  "about_text": "This console harmonizes trusted climate datasets with health system workflows to inform resilient decision making.",
+  "default_metric": "tmean_c"
+}

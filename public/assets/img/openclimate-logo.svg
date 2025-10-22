@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img" aria-labelledby="title desc">
+  <title id="title">OpenClimate-DHIS</title>
+  <desc id="desc">Abstract climate and health logo</desc>
+  <defs>
+    <linearGradient id="grad" x1="0%" x2="100%" y1="0%" y2="100%">
+      <stop offset="0%" stop-color="#0b3954"/>
+      <stop offset="100%" stop-color="#ff7f11"/>
+    </linearGradient>
+  </defs>
+  <rect width="160" height="160" rx="24" fill="#f3f6f9"/>
+  <circle cx="80" cy="80" r="56" fill="url(#grad)" opacity="0.9"/>
+  <path d="M40 96c18-8 30-24 40-24s22 16 40 24" fill="none" stroke="#ffffff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="60" cy="68" r="9" fill="#f2f7ff" opacity="0.9"/>
+  <circle cx="100" cy="92" r="11" fill="#fff5e6" opacity="0.9"/>
+</svg>
