@@ -214,6 +214,42 @@ if (is_dir($backupDir)) {
 
       <article class="card elevation">
         <div class="card-content">
+          <div class="card-heading">
+            <h2>System Maintenance</h2>
+            <?php if ($stateUpdated): ?>
+              <span class="status-pill status-pill--muted">Updated <?= htmlspecialchars($stateUpdated); ?></span>
+            <?php endif; ?>
+          </div>
+          <p class="section-lead">Manage package versions and keep track of your last install activity.</p>
+          <div class="status-grid status-grid--compact">
+            <div>
+              <p class="status-label">Current version</p>
+              <p class="status-value"><?= htmlspecialchars($currentVersion ?: 'Unknown'); ?></p>
+            </div>
+            <?php if ($previousVersion): ?>
+              <div>
+                <p class="status-label">Previous version</p>
+                <p class="status-value"><?= htmlspecialchars($previousVersion); ?></p>
+              </div>
+            <?php endif; ?>
+            <div>
+              <p class="status-label">Last action</p>
+              <p class="status-value"><?= htmlspecialchars($lastActionLabel); ?></p>
+            </div>
+            <div>
+              <p class="status-label">Latest backup</p>
+              <p class="status-value"><?= htmlspecialchars($latestBackup ?: 'None recorded'); ?></p>
+            </div>
+          </div>
+        </div>
+        <div class="card-action card-action--stacked">
+          <a class="btn btn-primary" href="run_job.php?action=upgrade">Upgrade package</a>
+          <a class="btn btn-tertiary" href="run_job.php?action=downgrade">Downgrade package</a>
+        </div>
+      </article>
+
+      <article class="card elevation">
+        <div class="card-content">
           <h2>Recent Climate Values</h2>
           <p class="section-lead">A quick view of the most recent temperature and precipitation metrics prepared for DHIS2.</p>
           <div class="table-wrapper">
