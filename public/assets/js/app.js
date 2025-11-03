@@ -9,6 +9,171 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  const chartCanvas = document.getElementById('climateTrendsChart');
+  const chartFallback = document.getElementById('chartFallback');
+
+  const showChartFallback = (message) => {
+    if (!chartFallback) {
+      return;
+    }
+    chartFallback.textContent = message;
+    chartFallback.hidden = !message;
+  };
+
+  const cssVar = (name, fallback) => {
+    const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    return value || fallback;
+  };
+
+  const hexToRgba = (hex, alpha) => {
+    if (typeof hex !== 'string' || !hex.startsWith('#') || (hex.length !== 7 && hex.length !== 4)) {
+      return `rgba(11, 57, 84, ${alpha})`;
+    }
+    const normalized = hex.length === 4
+      ? `#${hex[1]}${hex[1]}${hex[2]}${hex[2]}${hex[3]}${hex[3]}`
+      : hex;
+    const int = parseInt(normalized.slice(1), 16);
+    const r = (int >> 16) & 255;
+    const g = (int >> 8) & 255;
+    const b = int & 255;
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  };
+
+  if (chartCanvas) {
+    if (typeof Chart === 'undefined') {
+      showChartFallback('Charts are unavailable because the Chart.js library could not be loaded.');
+    } else {
+      fetch('/api.php?fn=timeseries&days=14')
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error('Unable to load time series data');
+          }
+          return response.json();
+        })
+        .then((payload) => {
+          const series = payload?.series;
+          if (!series || !Array.isArray(series.labels) || !series.labels.length) {
+            showChartFallback('Not enough recent observations to plot a time series yet.');
+            return;
+          }
+
+          const labels = series.labels.map((label) => {
+            if (typeof label === 'string' && label.length === 8) {
+              return `${label.slice(0, 4)}-${label.slice(4, 6)}-${label.slice(6, 8)}`;
+            }
+            return label;
+          });
+
+          const siteCounts = Array.isArray(series.siteCounts) ? series.siteCounts : [];
+          const primary = cssVar('--primary-color', '#0b3954');
+          const accent = cssVar('--accent-color', '#ff7f11');
+
+          const chart = new Chart(chartCanvas.getContext('2d'), {
+            type: 'line',
+            data: {
+              labels,
+              datasets: [
+                {
+                  label: 'Mean Temperature (°C)',
+                  data: Array.isArray(series.temperature) ? series.temperature : [],
+                  yAxisID: 'yTemp',
+                  borderColor: primary,
+                  backgroundColor: hexToRgba(primary, 0.2),
+                  tension: 0.35,
+                  borderWidth: 3,
+                  pointRadius: 3,
+                  pointHoverRadius: 5,
+                  spanGaps: true
+                },
+                {
+                  label: 'Mean Rainfall (mm)',
+                  data: Array.isArray(series.rainfall) ? series.rainfall : [],
+                  yAxisID: 'yRain',
+                  borderColor: accent,
+                  backgroundColor: hexToRgba(accent, 0.18),
+                  tension: 0.35,
+                  borderDash: [6, 6],
+                  borderWidth: 3,
+                  pointRadius: 3,
+                  pointHoverRadius: 5,
+                  spanGaps: true
+                }
+              ]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              interaction: {
+                mode: 'index',
+                intersect: false
+              },
+              plugins: {
+                legend: {
+                  position: 'bottom'
+                },
+                tooltip: {
+                  callbacks: {
+                    afterBody: (items) => {
+                      if (!items.length) {
+                        return '';
+                      }
+                      const idx = items[0].dataIndex;
+                      const count = siteCounts[idx];
+                      if (!count) {
+                        return '';
+                      }
+                      return `Reporting sites: ${count}`;
+                    }
+                  }
+                }
+              },
+              scales: {
+                yTemp: {
+                  type: 'linear',
+                  position: 'left',
+                  title: {
+                    display: true,
+                    text: 'Temperature (°C)'
+                  },
+                  ticks: {
+                    color: primary
+                  },
+                  grid: {
+                    color: 'rgba(15, 23, 42, 0.08)'
+                  }
+                },
+                yRain: {
+                  type: 'linear',
+                  position: 'right',
+                  title: {
+                    display: true,
+                    text: 'Rainfall (mm)'
+                  },
+                  grid: {
+                    drawOnChartArea: false
+                  },
+                  ticks: {
+                    color: accent
+                  }
+                },
+                x: {
+                  title: {
+                    display: true,
+                    text: 'Date (UTC)'
+                  }
+                }
+              }
+            }
+          });
+
+          chartCanvas.setAttribute('aria-label', `Climate trends for the past ${payload?.window || 14} days.`);
+        })
+        .catch((err) => {
+          showChartFallback(`${err.message}. Preview payload to ensure data is available.`);
+        });
+    }
+  }
+
   const mapEl = document.getElementById('climateMap');
   if (!mapEl || typeof L === 'undefined') {
     return;

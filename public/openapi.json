@@ -1,0 +1,409 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Climate Health Data API",
+    "description": "Programmatic access to aggregated climate indicators prepared for health sector decision support and DHIS2 publishing.",
+    "version": "1.1.0"
+  },
+  "servers": [
+    {
+      "url": "./",
+      "description": "Relative to the deployed Climate Health dashboard"
+    }
+  ],
+  "paths": {
+    "/api.php": {
+      "get": {
+        "summary": "Retrieve climate payloads",
+        "description": "Multiplexed endpoint driven by the `fn` query parameter.",
+        "operationId": "getClimatePayload",
+        "parameters": [
+          {
+            "name": "fn",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "preview",
+                "gis-report",
+                "timeseries"
+              ]
+            },
+            "description": "Selects which payload to generate."
+          },
+          {
+            "name": "metric",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "tmean_c",
+                "rain_mm"
+              ]
+            },
+            "description": "For `fn=gis-report`, choose which metric drives the colour ramp (default: `tmean_c`)."
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "json",
+                "geojson"
+              ]
+            },
+            "description": "For `fn=gis-report`, requesting `geojson` downloads a file suitable for GIS tooling."
+          },
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 7,
+              "maximum": 90,
+              "default": 14
+            },
+            "description": "For `fn=timeseries`, number of recent days to aggregate (bounded between 7 and 90)."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful climate payload response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/Dhis2Preview"
+                    },
+                    {
+                      "$ref": "#/components/schemas/GisReport"
+                    },
+                    {
+                      "$ref": "#/components/schemas/TimeSeries"
+                    }
+                  ]
+                },
+                "examples": {
+                  "preview": {
+                    "summary": "DHIS2 dataValueSet preview",
+                    "value": {
+                      "dataSet": "CLIMATE_DATASET",
+                      "period": "20250102",
+                      "dataValues": [
+                        {
+                          "orgUnit": "Zw9G1aB3",
+                          "dataElement": "TMEAN_C",
+                          "categoryOptionCombo": "HllvX50cXC0",
+                          "value": 22.3
+                        }
+                      ]
+                    }
+                  },
+                  "gis": {
+                    "summary": "GeoJSON report",
+                    "value": {
+                      "type": "FeatureCollection",
+                      "features": [
+                        {
+                          "type": "Feature",
+                          "geometry": {
+                            "type": "Point",
+                            "coordinates": [
+                              38.7578,
+                              8.9806
+                            ]
+                          },
+                          "properties": {
+                            "id": 1,
+                            "name": "Addis Ababa - Health Zone A",
+                            "date_utc": "20250102",
+                            "tmean_c": 22.3,
+                            "rain_mm": 0.0,
+                            "source": "DEMO",
+                            "colour": "#10b981"
+                          }
+                        }
+                      ],
+                      "meta": {
+                        "metric": "tmean_c",
+                        "generated_at": "2025-01-03T09:30:00Z"
+                      }
+                    }
+                  },
+                  "timeseries": {
+                    "summary": "Daily aggregates",
+                    "value": {
+                      "window": 14,
+                      "series": {
+                        "labels": [
+                          "20250101",
+                          "20250102"
+                        ],
+                        "temperature": [
+                          21.13,
+                          21.77
+                        ],
+                        "rainfall": [
+                          2.8,
+                          0.4
+                        ],
+                        "siteCounts": [
+                          3,
+                          3
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid function name or parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "unknown fn"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Dhis2Preview": {
+        "type": "object",
+        "required": [
+          "dataSet",
+          "period",
+          "dataValues"
+        ],
+        "properties": {
+          "dataSet": {
+            "type": "string",
+            "description": "DHIS2 dataSet UID configured in the environment."
+          },
+          "period": {
+            "type": "string",
+            "pattern": "^\\d{8}$",
+            "description": "ISO-like period string (YYYYMMDD)."
+          },
+          "dataValues": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "orgUnit",
+                "dataElement",
+                "categoryOptionCombo",
+                "value"
+              ],
+              "properties": {
+                "orgUnit": {
+                  "type": "string"
+                },
+                "dataElement": {
+                  "type": "string"
+                },
+                "categoryOptionCombo": {
+                  "type": "string"
+                },
+                "value": {
+                  "type": "number",
+                  "format": "float"
+                }
+              }
+            }
+          }
+        }
+      },
+      "GisReport": {
+        "type": "object",
+        "required": [
+          "type",
+          "features",
+          "meta"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "FeatureCollection"
+            ]
+          },
+          "features": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "type",
+                "geometry",
+                "properties"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "Feature"
+                  ]
+                },
+                "geometry": {
+                  "type": "object",
+                  "required": [
+                    "type",
+                    "coordinates"
+                  ],
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "Point"
+                      ]
+                    },
+                    "coordinates": {
+                      "type": "array",
+                      "items": {
+                        "type": "number",
+                        "format": "float"
+                      },
+                      "minItems": 2,
+                      "maxItems": 2
+                    }
+                  }
+                },
+                "properties": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "date_utc": {
+                      "type": "string",
+                      "pattern": "^\\d{8}$"
+                    },
+                    "tmean_c": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "rain_mm": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "source": {
+                      "type": "string"
+                    },
+                    "colour": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "meta": {
+            "type": "object",
+            "properties": {
+              "metric": {
+                "type": "string",
+                "enum": [
+                  "tmean_c",
+                  "rain_mm"
+                ]
+              },
+              "generated_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      },
+      "TimeSeries": {
+        "type": "object",
+        "required": [
+          "window",
+          "series"
+        ],
+        "properties": {
+          "window": {
+            "type": "integer",
+            "minimum": 7,
+            "maximum": 90
+          },
+          "series": {
+            "type": "object",
+            "required": [
+              "labels",
+              "temperature",
+              "rainfall",
+              "siteCounts"
+            ],
+            "properties": {
+              "labels": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^\\d{8}$"
+                }
+              },
+              "temperature": {
+                "type": "array",
+                "items": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                }
+              },
+              "rainfall": {
+                "type": "array",
+                "items": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                }
+              },
+              "siteCounts": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
