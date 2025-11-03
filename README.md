@@ -9,6 +9,7 @@ Built for standard **LAMP** hosting (Linux/Apache/MySQL/PHP 8+), with a Material
 - ETL: fetch → transform (daily aggregates) → store
 - DHIS2 push via Web API (`/api/dataValueSets`) with **dry-run** toggle
 - Simple admin UI to run jobs and preview outgoing payloads
+- Built-in Swagger UI explorer for the REST-style climate payloads
 
 ## Quick Start
 1. Create a MySQL database and user.
@@ -23,6 +24,7 @@ Built for standard **LAMP** hosting (Linux/Apache/MySQL/PHP 8+), with a Material
 4. Deploy the `public/` folder under your Apache vhost DocumentRoot (or point vhost to it).
 5. Ensure `tmp/` is writable by the web server user.
 6. Visit the app (e.g., `https://yourserver/`) and click **Run Daily Ingest**.
+7. Explore the machine-to-machine contract via `/swagger.php` and download the OpenAPI document for integration work.
 
 ## Cron (optional)
 ```

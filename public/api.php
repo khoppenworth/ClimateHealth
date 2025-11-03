@@ -42,6 +42,54 @@ if ($fn === 'preview') {
   exit;
 }
 
+if ($fn === 'timeseries') {
+  $days = (int) ($_GET['days'] ?? 14);
+  if ($days < 7) {
+    $days = 7;
+  }
+  if ($days > 90) {
+    $days = 90;
+  }
+
+  $since = (new DateTimeImmutable('now', new DateTimeZone('UTC')))
+    ->modify(sprintf('-%d days', $days - 1))
+    ->format('Ymd');
+
+  $sql = "SELECT date_utc,
+                 AVG(tmean_c) AS avg_tmean,
+                 AVG(rain_mm) AS avg_rain,
+                 COUNT(*) AS site_count
+          FROM climate_values
+          WHERE date_utc >= ?
+          GROUP BY date_utc
+          ORDER BY date_utc ASC";
+
+  $stmt = $db->prepare($sql);
+  $stmt->execute([$since]);
+  $rows = $stmt->fetchAll();
+
+  $series = [
+    'labels' => [],
+    'temperature' => [],
+    'rainfall' => [],
+    'siteCounts' => []
+  ];
+
+  foreach ($rows as $row) {
+    $series['labels'][] = $row['date_utc'];
+    $series['temperature'][] = $row['avg_tmean'] !== null ? round((float)$row['avg_tmean'], 2) : null;
+    $series['rainfall'][] = $row['avg_rain'] !== null ? round((float)$row['avg_rain'], 2) : null;
+    $series['siteCounts'][] = (int) $row['site_count'];
+  }
+
+  header('Content-Type: application/json');
+  echo json_encode([
+    'window' => $days,
+    'series' => $series
+  ], JSON_PRETTY_PRINT);
+  exit;
+}
+
 if ($fn === 'gis-report') {
   $metric = $_GET['metric'] ?? 'tmean_c';
   $validMetrics = ['tmean_c', 'rain_mm'];

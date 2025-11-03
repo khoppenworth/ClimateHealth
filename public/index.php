@@ -156,6 +156,7 @@ if (is_dir($backupDir)) {
         <li><a href="run_job.php?action=ingest" class="nav-link">Run Daily Ingest</a></li>
         <li><a href="run_job.php?action=publish" class="nav-link">Publish to DHIS2</a></li>
         <li><a href="api.php?fn=preview" class="nav-link">Preview Payload</a></li>
+        <li><a href="swagger.php" class="nav-link">API Docs</a></li>
         <li><a href="?logout=1" class="nav-link">Logout</a></li>
       </ul>
     </div>
@@ -209,6 +210,22 @@ if (is_dir($backupDir)) {
           <a class="btn btn-primary" href="run_job.php?action=ingest">Run Daily Ingest</a>
           <a class="btn btn-secondary" href="run_job.php?action=publish">Publish to DHIS2</a>
           <a class="btn btn-tertiary" href="api.php?fn=preview">Preview Payload</a>
+        </div>
+      </article>
+
+      <article class="card elevation">
+        <div class="card-content">
+          <div class="card-heading">
+            <h2>Climate Trends</h2>
+            <div class="card-heading__actions">
+              <a class="btn-flat" href="api.php?fn=timeseries&days=30" target="_blank" rel="noopener">Download JSON</a>
+            </div>
+          </div>
+          <p class="section-lead">Daily mean temperature and rainfall averages across all mapped health locations.</p>
+          <div class="chart-container">
+            <canvas id="climateTrendsChart" role="img" aria-label="Climate trends for the past two weeks"></canvas>
+            <div id="chartFallback" class="chart-fallback" hidden></div>
+          </div>
         </div>
       </article>
 
@@ -331,6 +348,7 @@ if (is_dir($backupDir)) {
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-VHZ7v6czS4QhIwTZPIYOvTo95OfzmiEJeZVrDCTnhgypKekJy5o+1OtSWT8gKa5z" crossorigin=""></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js" integrity="sha384-1rR7x1YgnSUZXoqBYwygJyI072QtdgQXl3k5iADG7n2AFD+a83H8XTur2qxGn8pY" crossorigin="anonymous"></script>
   <script src="/assets/js/app.js"></script>
 </body>
 </html>
